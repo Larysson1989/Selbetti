@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import RadialGauge from "./RadialGauge";
 import LiveDot from "./LiveDot";
 
@@ -136,6 +137,12 @@ export default function Dashboard() {
           >
             Atualizar
           </button>
+          <Link
+            href="/relatorios/chamadas"
+            className="text-xs font-mono uppercase tracking-wider border border-panel-border rounded-md px-3 py-2 hover:border-amber hover:text-amber transition-colors"
+          >
+            Relatórios →
+          </Link>
           <button
             onClick={handleLogout}
             className="text-xs font-mono uppercase tracking-wider text-muted hover:text-red transition-colors"

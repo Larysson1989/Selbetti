@@ -98,3 +98,81 @@ export async function getStatusDiscador(): Promise<any> {
   });
   return r?.response ?? null;
 }
+
+// --------------------------------------------------------------------
+// Relatórios históricos (filtrados por período)
+// --------------------------------------------------------------------
+
+/** Relatório de discagem bruto (texto CSV, separado por ';') de uma campanha. */
+export async function getRelatorioDiscador(
+  idExterno: number,
+  dataIni: string,
+  dataFim: string
+): Promise<string> {
+  const r = await nexusFetch(`/ncall/api/v1/relatorios/${idExterno}/discador`, {
+    method: "POST",
+    body: JSON.stringify({ dataIni, dataFim }),
+    timeoutMs: 45000,
+  });
+  return r?.response?.dados ?? "";
+}
+
+/** Histórico de pausas dos agentes de uma campanha, por período. */
+export async function getRelatorioPausas(
+  idExterno: number,
+  dataIni: string,
+  dataFim: string
+): Promise<any[]> {
+  const r = await nexusFetch(`/ncall/api/v1/relatorios/${idExterno}/pausas`, {
+    method: "POST",
+    body: JSON.stringify({ dataIni, dataFim }),
+    timeoutMs: 45000,
+  });
+  return Array.isArray(r?.response) ? r.response : [];
+}
+
+/** Histórico de login/logoff dos agentes de uma campanha, por período. */
+export async function getRelatorioLoginLogoff(
+  idExterno: number,
+  dataIni: string,
+  dataFim: string,
+  todosOsRegistros: 0 | 1 = 0
+): Promise<any[]> {
+  const r = await nexusFetch(`/ncall/api/v1/relatorios/${idExterno}/loginLogoff`, {
+    method: "POST",
+    body: JSON.stringify({ dataIni, dataFim, todosOsRegistros }),
+    timeoutMs: 45000,
+  });
+  return Array.isArray(r?.response) ? r.response : [];
+}
+
+/** Resumo (ou detalhado) de resultados de disparo de um Mailing específico. */
+export async function getRelatorioCampanhaResumo(
+  idMailing: number,
+  tipoRelatorio: "resumo" | "detalhado" = "resumo"
+): Promise<any> {
+  const r = await nexusFetch("/ncall/api/v1/relatorios/campanha", {
+    method: "POST",
+    body: JSON.stringify({ filtros: { idMailing, tipoRelatorio } }),
+    timeoutMs: 45000,
+  });
+  return r?.response ?? null;
+}
+
+/**
+ * Tabulações de um telefone específico, por período.
+ * IMPORTANTE: nesta instalação da Nexus, 'telefone' é obrigatório e deve ser
+ * um número completo (DDD+NUMERO) — não aceita busca parcial nem vazio.
+ */
+export async function getRelatorioTabulacoesPorTelefone(
+  dataInicio: string,
+  dataFim: string,
+  telefone: string
+): Promise<any[]> {
+  const r = await nexusFetch("/ncall/api/v1/relatorios/tabulacoes", {
+    method: "POST",
+    body: JSON.stringify({ filtros: { datainicio: dataInicio, datafim: dataFim, telefone } }),
+    timeoutMs: 45000,
+  });
+  return Array.isArray(r?.response) ? r.response : [];
+}
