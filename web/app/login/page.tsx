@@ -113,7 +113,7 @@ function LoginForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-3xl bg-panel rounded-3xl shadow-xl shadow-blue/5 border border-panel-border overflow-hidden"
+        className="relative z-10 w-full max-w-4xl bg-panel rounded-3xl shadow-xl shadow-blue/5 border border-panel-border overflow-hidden"
       >
         <div className="grid md:grid-cols-2">
           {/* Coluna esquerda: marca */}
@@ -127,18 +127,18 @@ function LoginForm() {
               ))}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-6">
               {/* Coloque os arquivos reais em: public/logo-pequeno-principe.png e public/logo-selbetti.png */}
               <img
                 src="/logo-pequeno-principe.png"
                 alt="Hospital Pequeno Príncipe"
-                className="h-12 w-auto object-contain"
+                className="h-20 md:h-24 w-auto object-contain"
               />
-              <span className="w-px h-9 bg-panel-border" />
+              <span className="w-px h-16 md:h-20 bg-panel-border" />
               <img
                 src="/logo-selbetti.png"
                 alt="Selbetti"
-                className="h-7 w-auto object-contain"
+                className="h-10 md:h-12 w-auto object-contain"
               />
             </div>
 
