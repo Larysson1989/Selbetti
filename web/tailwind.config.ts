@@ -5,15 +5,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#10141A",
-        panel: "#181D25",
-        "panel-border": "#262D38",
-        amber: "#F2A93B",
-        green: "#3FBF83",
-        red: "#E5484D",
-        blue: "#6EA8FE",
-        paper: "#EDEFF2",
-        muted: "#8B93A1",
+        ink: "#F4F7FC",
+        panel: "#FFFFFF",
+        "panel-border": "#E4E9F2",
+        amber: "#F7B500",
+        green: "#16A34A",
+        red: "#DC2626",
+        blue: "#1B3B8C",
+        paper: "#1F2937",
+        muted: "#6B7280",
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],

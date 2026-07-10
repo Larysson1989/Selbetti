@@ -21,7 +21,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Selbetti — Painel de Operações",
+  title: "Selbetti — Indicadores CT",
   description: "Indicadores em tempo real da operação (API Nexus).",
 };
 

@@ -7,9 +7,9 @@ interface RadialGaugeProps {
 }
 
 function colorFor(value: number): string {
-  if (value >= 80) return "#3FBF83";
-  if (value >= 50) return "#F2A93B";
-  return "#E5484D";
+  if (value >= 80) return "#16A34A";
+  if (value >= 50) return "#F7B500";
+  return "#DC2626";
 }
 
 export default function RadialGauge({ label, value, size = 96 }: RadialGaugeProps) {
@@ -18,7 +18,7 @@ export default function RadialGauge({ label, value, size = 96 }: RadialGaugeProp
   const circumference = 2 * Math.PI * radius;
   const pct = value == null ? 0 : Math.max(0, Math.min(100, value));
   const dash = (pct / 100) * circumference;
-  const color = value == null ? "#8B93A1" : colorFor(pct);
+  const color = value == null ? "#9CA3AF" : colorFor(pct);
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -34,7 +34,7 @@ export default function RadialGauge({ label, value, size = 96 }: RadialGaugeProp
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#262D38"
+            stroke="#E4E9F2"
             strokeWidth={strokeWidth}
           />
           <circle
