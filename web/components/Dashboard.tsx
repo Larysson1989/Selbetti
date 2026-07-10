@@ -91,6 +91,8 @@ export default function Dashboard() {
   );
 
   const ramaisCount = data?.ramais.ok ? toArray(data.ramais.data).length : null;
+  const filasVozOk = data?.filasVoz.ok ?? null;
+  const filasChatOk = data?.filasChat.ok ?? null;
   const filasVozList = data?.filasVoz.ok ? toArray(data.filasVoz.data) : [];
   const filasChatList = data?.filasChat.ok ? toArray(data.filasChat.data) : [];
   const campanhasList = data?.campanhas.ok ? toArray(data.campanhas.data) : [];
@@ -103,6 +105,12 @@ export default function Dashboard() {
   const discadorLigado = data?.statusDiscador.ok
     ? Number(data.statusDiscador.data) === 1
     : null;
+
+  const falhas = data
+    ? (
+        [data.statusCC, data.ramais, data.filasVoz, data.filasChat, data.campanhas, data.statusDiscador] as SafeResult<any>[]
+      ).filter((r): r is { label: string; ok: false; error: string } => !r.ok)
+    : [];
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10 md:py-10 max-w-7xl mx-auto">
@@ -149,8 +157,8 @@ export default function Dashboard() {
         <>
           <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
             <KpiCard label="Ramais" value={ramaisCount} />
-            <KpiCard label="Filas de voz" value={filasVozList.length} />
-            <KpiCard label="Filas de chat" value={filasChatList.length} />
+            <KpiCard label="Filas de voz" value={filasVozOk ? filasVozList.length : null} />
+            <KpiCard label="Filas de chat" value={filasChatOk ? filasChatList.length : null} />
             <KpiCard label="Campanhas ativas" value={campanhasAtivas} />
             <KpiCard label="Alvos restantes" value={totalAlvosRestantes} />
             <KpiCard
@@ -241,6 +249,25 @@ export default function Dashboard() {
               <EmptyState text="Nenhuma campanha ativa retornada pela API neste momento." />
             )}
           </section>
+
+          {falhas.length > 0 && (
+            <section className="mb-12">
+              <SectionHeader
+                title="Diagnóstico"
+                subtitle="Fontes de dados que falharam nesta consulta"
+              />
+              <div className="bg-panel border border-red/30 rounded-lg divide-y divide-panel-border">
+                {falhas.map((f) => (
+                  <div key={f.label} className="px-4 py-3 flex items-start gap-3">
+                    <span className="font-mono text-xs text-red uppercase mt-0.5 shrink-0">
+                      {f.label}
+                    </span>
+                    <span className="text-sm text-muted">{f.error}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
     </main>
