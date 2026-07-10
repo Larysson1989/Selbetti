@@ -64,6 +64,8 @@ class _BaseSession:
         self.session = requests.Session()
         retries = Retry(
             total=max_retries,
+            connect=max_retries,
+            read=0,  # NÃO retenta em timeout de leitura (relatórios pesados já demoram; retentar só multiplica a espera)
             backoff_factor=1.5,
             status_forcelist=[500, 502, 503, 504],
             allowed_methods=["GET", "POST"],
@@ -92,10 +94,13 @@ class _BaseSession:
         files: Optional[dict] = None,
         content_type: str = "application/json",
         raw: bool = False,
+        timeout: Optional[int] = None,
     ) -> Any:
         """
         Executa a requisição HTTP e trata o padrão de resposta da API Nexus.
         Se raw=True, retorna a Response inteira (útil para downloads binários).
+        timeout: sobrepõe o timeout padrão da sessão para esta chamada específica
+                 (útil para relatórios pesados que demoram mais que o normal).
         """
         url = self._url(path)
         headers = self._headers(content_type=content_type if not files else None)
@@ -110,7 +115,7 @@ class _BaseSession:
             json=json_body if (json_body is not None and not files and not data) else None,
             data=data if (data is not None or files is not None) else None,
             files=files,
-            timeout=self.timeout,
+            timeout=timeout or self.timeout,
         )
 
         if raw:
@@ -136,19 +141,23 @@ class _BaseSession:
             )
 
         if not resp.ok:
+            mensagem = f"HTTP {resp.status_code} ao chamar {url}"
+            if isinstance(payload, dict) and payload.get("message"):
+                mensagem = payload["message"]
             raise NexusAPIError(
-                f"HTTP {resp.status_code} ao chamar {url}",
+                mensagem,
                 http_status=resp.status_code,
                 payload=payload if isinstance(payload, dict) else {},
             )
 
         return payload
 
-    def get(self, path: str, params: Optional[dict] = None) -> Any:
-        return self.request("GET", path, params=params)
+    def get(self, path: str, params: Optional[dict] = None, timeout: Optional[int] = None) -> Any:
+        return self.request("GET", path, params=params, timeout=timeout)
 
-    def post(self, path: str, json_body: Optional[dict] = None, params: Optional[dict] = None) -> Any:
-        return self.request("POST", path, json_body=json_body, params=params)
+    def post(self, path: str, json_body: Optional[dict] = None, params: Optional[dict] = None,
+              timeout: Optional[int] = None) -> Any:
+        return self.request("POST", path, json_body=json_body, params=params, timeout=timeout)
 
     def post_multipart(self, path: str, data: Optional[dict] = None, files: Optional[dict] = None) -> Any:
         return self.request("POST", path, data=data, files=files)
@@ -556,13 +565,13 @@ class RelatoriosAPI:
                             {"dataIni": data_ini, "dataFim": data_fim})
 
     def gravacoes(self, data_inicio: str, data_fim: str, telefone: Optional[str] = None,
-                  fila: Optional[str] = None) -> dict:
+                  fila: Optional[str] = None, timeout: int = 120) -> dict:
         filtros = {"datainicio": data_inicio, "datafim": data_fim}
         if telefone:
             filtros["telefone"] = telefone
         if fila:
             filtros["fila"] = fila
-        return self.s.post("/ncall/api/v1/relatorios/gravacoes", {"filtros": filtros})
+        return self.s.post("/ncall/api/v1/relatorios/gravacoes", {"filtros": filtros}, timeout=timeout)
 
     def login_logoff(self, id_externo: int, data_ini: str, data_fim: str, todos_os_registros: int = 0) -> dict:
         body = {"dataIni": data_ini, "dataFim": data_fim, "todosOsRegistros": todos_os_registros}
@@ -573,19 +582,24 @@ class RelatoriosAPI:
                             {"dataIni": data_ini, "dataFim": data_fim})
 
     def pesquisa_satisfacao(self, data_inicio: str, data_fim: str, telefone: Optional[str] = None,
-                             identificador: Optional[str] = None) -> dict:
+                             identificador: Optional[str] = None, timeout: int = 120) -> dict:
         filtros = {"datainicio": data_inicio, "datafim": data_fim}
         if telefone:
             filtros["telefone"] = telefone
         if identificador:
             filtros["identificador"] = identificador
-        return self.s.post("/ncall/api/v1/relatorios/pesquisadesatisfacao", {"filtros": filtros})
+        return self.s.post("/ncall/api/v1/relatorios/pesquisadesatisfacao", {"filtros": filtros}, timeout=timeout)
 
-    def tabulacoes(self, data_inicio: str, data_fim: str, telefone: Optional[str] = None) -> dict:
-        filtros = {"datainicio": data_inicio, "datafim": data_fim}
-        if telefone:
-            filtros["telefone"] = telefone
-        return self.s.post("/ncall/api/v1/relatorios/tabulacoes", {"filtros": filtros})
+    def tabulacoes(self, data_inicio: str, data_fim: str, telefone: str,
+                    timeout: int = 120) -> dict:
+        """
+        IMPORTANTE: nesta instalação da Nexus, 'telefone' é OBRIGATÓRIO e deve
+        ser um número completo e válido no formato DDDNUMERO (ex: '4133221336').
+        Não aceita valor vazio nem busca parcial (ex: só DDD) — o servidor
+        responde 400 "Filtro telefone [...] em formato inválido" nesses casos.
+        """
+        filtros = {"datainicio": data_inicio, "datafim": data_fim, "telefone": telefone}
+        return self.s.post("/ncall/api/v1/relatorios/tabulacoes", {"filtros": filtros}, timeout=timeout)
 
 
 class EmailAPI:
