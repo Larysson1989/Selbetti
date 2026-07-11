@@ -23,8 +23,9 @@ async function nexusFetch(path: string, init?: NexusFetchOptions): Promise<any> 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), init?.timeoutMs ?? 15000);
 
+  let res: Response;
   try {
-    const res = await fetch(`${BASE_URL}${path}`, {
+    res = await fetch(`${BASE_URL}${path}`, {
       ...init,
       headers: {
         Token: TOKEN as string,
@@ -34,7 +35,19 @@ async function nexusFetch(path: string, init?: NexusFetchOptions): Promise<any> 
       signal: controller.signal,
       cache: "no-store",
     });
+  } catch (err: any) {
+    clearTimeout(timeout);
+    if (err?.name === "AbortError") {
+      throw new Error(`Timeout ao chamar ${path} (sem resposta em ${init?.timeoutMs ?? 15000}ms)`);
+    }
+    const causa =
+      err?.cause?.code || err?.cause?.message || (typeof err?.cause === "string" ? err.cause : null);
+    throw new Error(
+      `Falha de rede ao chamar ${path}: ${err?.message || String(err)}${causa ? ` — causa: ${causa}` : ""}`
+    );
+  }
 
+  try {
     const text = await res.text();
     let json: any = null;
     try {
